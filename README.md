@@ -1,73 +1,106 @@
-# React + TypeScript + Vite
+# React Keycloak Authentication
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript + Vite application with Keycloak authentication integration.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js (v18 or higher)
+- Docker and Docker Compose
+- npm or yarn
 
-## React Compiler
+## Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Start Keycloak Server
+```bash
+docker-compose up -d
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Keycloak will be available at http://localhost:8080
+- Admin username: `admin`
+- Admin password: `admin`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 2. Configure Keycloak (First Time Only)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Open http://localhost:8080 and login to Admin Console
+2. Create a new realm: `myrealm`
+3. Create a client:
+   - Client ID: `react-app`
+   - Valid redirect URIs: `http://localhost:5173/*`
+   - Web origins: `http://localhost:5173`
+4. Create a test user with credentials
+
+### 3. Install Dependencies
+```bash
+npm install
 ```
+
+### 4. Run the Application
+```bash
+npm run dev
+```
+
+Open http://localhost:5173 in your browser.
+
+## Project Structure
+```
+react-keycloak-app/
+├── docker-compose.yml          # Keycloak + PostgreSQL setup
+├── src/
+│   ├── keycloak.ts            # Keycloak configuration
+│   ├── main.tsx               # Keycloak initialization
+│   ├── App.tsx                # Main app with auth UI
+│   └── hooks/
+│       └── useAuth.ts         # Custom auth hook (optional)
+└── README.md
+```
+
+## Keycloak Configuration
+
+The Keycloak instance is configured with:
+- PostgreSQL database for data persistence
+- Development mode (`start-dev`)
+- Data persists across container restarts
+
+### Useful Commands
+```bash
+# Stop Keycloak
+docker-compose down
+
+# Start Keycloak
+docker-compose up -d
+
+# View logs
+docker-compose logs -f keycloak
+
+# Fresh start (deletes all data)
+docker-compose down -v
+```
+
+## Key Features
+
+- ✅ User authentication via Keycloak
+- ✅ Persistent configuration (PostgreSQL)
+- ✅ Token auto-refresh
+- ✅ TypeScript support
+- ✅ React hooks for auth state
+
+## Environment
+
+- Keycloak URL: `http://localhost:8080/`
+- Realm: `myrealm`
+- Client ID: `react-app`
+- React App: `http://localhost:5173`
+
+## Troubleshooting
+
+**Can't access Keycloak?**
+- Check containers are running: `docker-compose ps`
+- View logs: `docker-compose logs keycloak`
+
+**Login redirects not working?**
+- Verify redirect URIs in Keycloak client settings
+- Ensure web origins includes `http://localhost:5173`
+
+**Lost configuration?**
+- Don't use `docker-compose down -v` (removes volumes)
+- Use `docker-compose down` to preserve data
